@@ -8,12 +8,12 @@ async fn main() {
     println!("quick-api: A command line interface for prototyping API calls");
 
     loop {
-        println!("Press any key to make test API call");
+        println!("Type or paste a URL to make an API call");
 
-        let mut option = String::new();
+        let mut url = String::new();
 
         io::stdin()
-            .read_line(&mut option)
+            .read_line(&mut url)
             .expect("Failed to read line");
 
         const REQUEST_URL: &str = "https://api.sampleapis.com/beers/ale";
