@@ -16,7 +16,9 @@ async fn main() {
             .read_line(&mut url)
             .expect("Failed to read line");
 
-        let future = api_handler::get(url);
+        let client: reqwest::Client = reqwest::Client::new();
+
+        let future = api_handler::get(client, url);
         let _ = block_on(future);
     }
 }
