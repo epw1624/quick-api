@@ -16,8 +16,7 @@ async fn main() {
             .read_line(&mut url)
             .expect("Failed to read line");
 
-        const REQUEST_URL: &str = "https://api.sampleapis.com/beers/ale";
-        let future = api_handler::get(REQUEST_URL.to_string());
+        let future = api_handler::get(url);
         let _ = block_on(future);
     }
 }
