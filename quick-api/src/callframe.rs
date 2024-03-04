@@ -1,7 +1,9 @@
 use std::io;
+use std::fs::File;
 use std::error::Error;
 use std::collections::HashMap;
 use serde_json;
+use serde::ser::{Serialize, SerializeStruct};
 
 pub struct Callframe {
     pub url: String,
@@ -56,4 +58,35 @@ impl Callframe {
 
         Ok(v)
     }
+
+    pub fn save_callframe(&self, filename: &str) -> io::Result<()> {
+        let file = File::create(filename)?;
+        serde_json::to_writer(file, self)?;
+        Ok(())
+    }
 }
+
+impl Serialize for Callframe {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Callframe", 4)?;
+        state.serialize_field("url", &self.url)?;
+
+        let method_as_string = match self.method {
+            reqwest::Method::GET => "GET",
+            reqwest::Method::POST => "POST",
+            reqwest::Method::PUT => "PUT",
+            reqwest::Method::DELETE => "DELETE",
+            _ => "NULL"
+        };
+        state.serialize_field("method", method_as_string)?;
+
+        state.serialize_field("headers", &self.headers)?;
+        state.serialize_field("response", &self.response)?;
+
+        state.end()
+    }
+}
+
