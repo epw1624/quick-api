@@ -53,7 +53,8 @@ impl Callframe {
     }
 
     pub fn save_callframe(&self, filename: &str) -> io::Result<()> {
-        let file = File::create(filename)?;
+        let data_directory = "data";
+        let file = File::create(format!("{}/{}", data_directory, filename))?;
         serde_json::to_writer(file, self)?;
         Ok(())
     }
