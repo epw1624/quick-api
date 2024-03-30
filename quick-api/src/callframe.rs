@@ -6,6 +6,8 @@ use serde_json;
 use serde::ser::{Serialize, SerializeStruct};
 use base64::{Engine as _, engine::general_purpose};
 
+pub mod new;
+
 pub struct Callframe {
     pub name: String,
     pub url: String,
@@ -16,7 +18,7 @@ pub struct Callframe {
     pub response: Option<serde_json::Value>,
 }
 
-impl Callframe {
+impl Callframe { // Public functions
     
     pub async fn make_request(&mut self) -> Result<serde_json::Value, Box<dyn Error>> {
         // build url with params
@@ -55,7 +57,7 @@ impl Callframe {
 
     pub fn save_callframe(&self) -> io::Result<()> {
         let data_directory = "data";
-        let file = File::create(format!("{}/{}", data_directory, &self.name))?;
+        let file = File::create(format!("{}/{}.json", data_directory, &self.name))?;
         serde_json::to_writer(file, self)?;
         Ok(())
     }
@@ -68,16 +70,34 @@ impl Callframe {
         self.headers.insert("Authorization".to_string(), auth);
     }
 
+    pub fn add_params(&mut self, params: &str) {
+        let params_list: Vec<&str> = params.split(',').collect();
+
+        let mut params_map = HashMap::<String, String>::new();
+        for param in params_list {
+            let mut parts = param.split('=');
+
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                params_map.insert(key.to_string(), value.to_string());
+            }
+        }
+        self.params = params_map;
+    }
+
+    pub fn get_summary(&self) -> HashMap<&str, &str> {
+        let mut summary: HashMap<&str, &str> = HashMap::new();
+
+        summary.insert("Method", self.serialize_method());
+        summary.insert("Name", self.name.as_str());
+        summary.insert("URL", self.url.as_str());
+
+        summary
+    }
+
 }
 
-impl Serialize for Callframe {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
-    where
-        S: serde::Serializer,
-    {
-        let mut state = serializer.serialize_struct("Callframe", 4)?;
-        state.serialize_field("url", &self.url)?;
-
+impl Callframe { // Private functions
+    fn serialize_method(&self) -> &str {
         let method_as_string = match self.method {
             reqwest::Method::GET => "GET",
             reqwest::Method::POST => "POST",
@@ -85,7 +105,19 @@ impl Serialize for Callframe {
             reqwest::Method::DELETE => "DELETE",
             _ => "NULL"
         };
-        state.serialize_field("method", method_as_string)?;
+        method_as_string
+    }
+}
+
+impl Serialize for Callframe {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> 
+    where
+        S: serde::Serializer,
+    {
+        let mut state = serializer.serialize_struct("Callframe", 7)?;
+        state.serialize_field("url", &self.url)?;
+
+        state.serialize_field("method", self.serialize_method())?;
 
         state.serialize_field("headers", &self.headers)?;
         state.serialize_field("params", &self.params)?;
@@ -100,5 +132,7 @@ impl Serialize for Callframe {
 
         state.end()
     }
+
+
 }
 
