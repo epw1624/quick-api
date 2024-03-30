@@ -18,7 +18,12 @@ impl Callframe {
     
     pub async fn make_request(&mut self) -> Result<serde_json::Value, Box<dyn Error>> {
         let client = reqwest::Client::new();
-        let response = match client.request(self.method.clone(), &self.url).send().await {
+        let mut request: reqwest::RequestBuilder = client.request(self.method.clone(), &self.url);
+        for (key, value) in &self.headers {
+            request = request.header(key, value);
+        }
+
+        let response = match request.send().await {
             Ok(response) => response,
             Err(err) => return Err(Box::new(err)),
         };
