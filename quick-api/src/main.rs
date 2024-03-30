@@ -1,5 +1,5 @@
 use callframe::Callframe;
-use clap::{command, Arg};
+use clap::{command, Arg, Command};
 use std::collections::HashMap;
 use futures::executor::block_on;
 
@@ -10,6 +10,14 @@ async fn main() {
 
     let match_result = command!()
     .about("quick-api: A command line interface for prototyping API calls")
+    .subcommand(Command::new("basic_auth")
+        .arg(Arg::new("username")
+            .short('u')
+            .required(true))
+        .arg(Arg::new("password")
+            .short('p')
+            .required(true))
+    )
     .arg(Arg::new("url")
         .long("url")
         .help("URL of the API call")
@@ -36,8 +44,17 @@ async fn main() {
         url,
         method,
         headers: HashMap::new(),
-        response: None
+        response: None,
+        status: None
     };
+
+    // Check if basic auth is provided
+    if let Some(basic_auth) = match_result.subcommand_matches("basic_auth") {
+        let username = basic_auth.get_one::<String>("username").unwrap().as_str();
+        let password = basic_auth.get_one::<String>("password").unwrap().as_str();
+
+        callframe.add_basic_auth(username, password);
+    }
 
     let future = callframe.make_request();
     let _ = block_on(future);
