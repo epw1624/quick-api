@@ -7,6 +7,7 @@ use serde::ser::{Serialize, SerializeStruct};
 use base64::{Engine as _, engine::general_purpose};
 
 pub struct Callframe {
+    pub name: String,
     pub url: String,
     pub method: reqwest::Method,
     pub headers: HashMap<String, String>,
@@ -52,9 +53,9 @@ impl Callframe {
         Ok(v)
     }
 
-    pub fn save_callframe(&self, filename: &str) -> io::Result<()> {
+    pub fn save_callframe(&self) -> io::Result<()> {
         let data_directory = "data";
-        let file = File::create(format!("{}/{}", data_directory, filename))?;
+        let file = File::create(format!("{}/{}", data_directory, &self.name))?;
         serde_json::to_writer(file, self)?;
         Ok(())
     }

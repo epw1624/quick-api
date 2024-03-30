@@ -1,6 +1,6 @@
 use callframe::Callframe;
 use clap::{command, Arg, Command};
-use std::{collections::HashMap, hash::Hash};
+use std::collections::HashMap;
 use futures::executor::block_on;
 
 mod callframe;
@@ -19,11 +19,16 @@ async fn main() {
             .required(true))
     )
     .arg(Arg::new("params")
-        .short('p')
+        .long("params")
         .value_delimiter(',')
         .help("Comma delimited series of key=value parameter pairs")
     )
-    .arg(Arg::new("url")
+    .arg(Arg::new("name")
+        .short('n')
+        .long("name")
+        .help("The name of the API call, will use as filename when saving call")
+        .required(true)
+    ).arg(Arg::new("url")
         .long("url")
         .help("URL of the API call")
         .required(true)
@@ -34,6 +39,7 @@ async fn main() {
         .required(true)
     ).get_matches();
 
+    let name: String = match_result.get_one::<String>("name").unwrap().to_string();
     let url: String = match_result.get_one::<String>("url").unwrap().to_string();
     let method_string: String = match_result.get_one::<String>("method").unwrap().to_string();
 
@@ -46,6 +52,7 @@ async fn main() {
     };
 
     let mut callframe = Callframe {
+        name,
         url,
         method,
         headers: HashMap::new(),
@@ -80,6 +87,6 @@ async fn main() {
     let future = callframe.make_request();
     let _ = block_on(future);
 
-    let _ = Callframe::save_callframe(&callframe, "test_output.json");
+    let _ = Callframe::save_callframe(&callframe);
 
 }
