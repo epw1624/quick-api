@@ -1,6 +1,6 @@
 use callframe::Callframe;
 use clap::{command, Arg, Command};
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 use futures::executor::block_on;
 
 mod callframe;
@@ -17,6 +17,11 @@ async fn main() {
         .arg(Arg::new("password")
             .short('p')
             .required(true))
+    )
+    .arg(Arg::new("params")
+        .short('p')
+        .value_delimiter(',')
+        .help("Comma delimited series of key=value parameter pairs")
     )
     .arg(Arg::new("url")
         .long("url")
@@ -44,9 +49,25 @@ async fn main() {
         url,
         method,
         headers: HashMap::new(),
+        params: HashMap::new(),
         response: None,
         status: None
     };
+
+    // Check if params are provided
+    if let Some(params) = match_result.get_many::<String>("params") {
+        let params_list: Vec<&String> = params.collect::<Vec<_>>();
+        
+        let mut params_map = HashMap::<String, String>::new();
+        for param in params_list {
+            let mut parts = param.split('=');
+
+            if let (Some(key), Some(value)) = (parts.next(), parts.next()) {
+                params_map.insert(key.to_string(), value.to_string());
+            }
+        }
+        callframe.params = params_map;
+    }
 
     // Check if basic auth is provided
     if let Some(basic_auth) = match_result.subcommand_matches("basic_auth") {

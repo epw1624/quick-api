@@ -10,6 +10,7 @@ pub struct Callframe {
     pub url: String,
     pub method: reqwest::Method,
     pub headers: HashMap<String, String>,
+    pub params: HashMap<String, String>,
     pub status: Option<reqwest::StatusCode>,
     pub response: Option<serde_json::Value>,
 }
@@ -17,8 +18,15 @@ pub struct Callframe {
 impl Callframe {
     
     pub async fn make_request(&mut self) -> Result<serde_json::Value, Box<dyn Error>> {
+        // build url with params
+        let mut full_url = self.url.clone();
+        for (key, value) in &self.params {
+            let param = format!("?{}={}", key, value);
+            full_url.push_str(&param);
+        }
+
         let client = reqwest::Client::new();
-        let mut request: reqwest::RequestBuilder = client.request(self.method.clone(), &self.url);
+        let mut request: reqwest::RequestBuilder = client.request(self.method.clone(), &full_url);
         for (key, value) in &self.headers {
             request = request.header(key, value);
         }
@@ -57,6 +65,7 @@ impl Callframe {
 
         self.headers.insert("Authorization".to_string(), auth);
     }
+
 }
 
 impl Serialize for Callframe {
@@ -77,6 +86,7 @@ impl Serialize for Callframe {
         state.serialize_field("method", method_as_string)?;
 
         state.serialize_field("headers", &self.headers)?;
+        state.serialize_field("params", &self.params)?;
 
         let status_as_u16: u16 = match self.status {
             Some(status) => status.as_u16(),
