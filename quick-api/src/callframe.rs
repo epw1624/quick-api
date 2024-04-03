@@ -1,13 +1,17 @@
-use std::io;
-use std::fs::File;
+pub mod callframe_visitor;
+pub mod new;
+pub mod load;
+
+use std::{fs, io};
 use std::error::Error;
 use std::collections::HashMap;
+use serde::Deserializer;
 use serde_json;
-use serde::ser::{Serialize, SerializeStruct};
+use serde::{ser::{Serialize, SerializeStruct}, Deserialize};
 use base64::{Engine as _, engine::general_purpose};
+use callframe_visitor::CallframeVisitor;
 
-pub mod new;
-
+#[derive(Default)]
 pub struct Callframe {
     pub name: String,
     pub url: String,
@@ -19,7 +23,7 @@ pub struct Callframe {
 }
 
 impl Callframe { // Public functions
-    
+
     pub async fn make_request(&mut self) -> Result<serde_json::Value, Box<dyn Error>> {
         // build url with params
         let mut full_url = self.url.clone();
@@ -57,7 +61,7 @@ impl Callframe { // Public functions
 
     pub fn save_callframe(&self) -> io::Result<()> {
         let data_directory = "data";
-        let file = File::create(format!("{}/{}.json", data_directory, &self.name))?;
+        let file = fs::File::create(format!("{}/{}.json", data_directory, &self.name))?;
         serde_json::to_writer(file, self)?;
         Ok(())
     }
@@ -97,6 +101,7 @@ impl Callframe { // Public functions
 }
 
 impl Callframe { // Private functions
+
     fn serialize_method(&self) -> &str {
         let method_as_string = match self.method {
             reqwest::Method::GET => "GET",
@@ -132,7 +137,15 @@ impl Serialize for Callframe {
 
         state.end()
     }
-
-
 }
 
+impl<'de> Deserialize<'de> for Callframe {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let visitor = CallframeVisitor {};
+        let result = deserializer.deserialize_map(visitor)?;
+        Ok(result)
+    }
+}
