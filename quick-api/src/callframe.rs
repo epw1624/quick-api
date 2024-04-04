@@ -120,6 +120,7 @@ impl Serialize for Callframe {
         S: serde::Serializer,
     {
         let mut state = serializer.serialize_struct("Callframe", 7)?;
+        state.serialize_field("name", &self.name)?;
         state.serialize_field("url", &self.url)?;
 
         state.serialize_field("method", self.serialize_method())?;
