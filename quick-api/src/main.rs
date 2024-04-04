@@ -1,5 +1,5 @@
 use callframe::Callframe;
-use clap::{command, Arg};
+use clap::{command, Arg, parser::ValueSource};
 use futures::executor::block_on;
 
 mod callframe;
@@ -24,7 +24,7 @@ async fn main() {
         .help("Select from existing saved API calls")
     ).get_matches();
 
-    if match_result.contains_id("new") {
+    if match_result.value_source("new") == Some(ValueSource::CommandLine) {
         let mut callframe = callframe::new::new_callframe();
 
         let future = callframe.make_request();
@@ -33,12 +33,12 @@ async fn main() {
         let _ = Callframe::save_callframe(&callframe);
     }
 
-    if match_result.contains_id("load") {
-        println!("test");
+    else if match_result.value_source("load") == Some(ValueSource::CommandLine) {
         let loaded_result: Option<Callframe> = callframe::load::load_callframe();
 
         match loaded_result {
             Some(mut callframe) => {
+                callframe.name = "test".to_string();
                 let future = callframe.make_request();
                 let _ = block_on(future);
                 let _ = Callframe::save_callframe(&callframe);
