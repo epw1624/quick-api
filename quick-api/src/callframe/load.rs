@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io;
 use std::io::Read;
-use dialoguer::{Select};
+use dialoguer::Select;
 
 mod file_handler;
 
@@ -27,13 +27,8 @@ pub fn load_callframe() -> Option<Callframe> {
         }
         Err(e) => {
             println!("Error: {}", e);
+            None
         }
-    }
-    
-
-    match load_from_file("data/beer.json") {
-        Ok(callframe) => return Some(callframe),
-        Err(_) => return None
     }
 }
 
