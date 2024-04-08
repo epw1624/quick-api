@@ -58,9 +58,49 @@ pub fn edit_method(callframe: &mut Callframe) {
 }
 
 pub fn edit_headers(callframe: &mut Callframe) {
-    println!("Placeholder for editing headers");
+    edit_hashmap(&mut callframe.headers);
 }
 
 pub fn edit_params(callframe: &mut Callframe) {
-    println!("Placeholder for editing params");
+    edit_hashmap(&mut callframe.params);
+}
+
+// common CLI interface for editing the HashMap fields of the Callframe
+fn edit_hashmap(map: &mut HashMap<String, String>) {
+    let mut editing = true;
+    while editing {
+        let mut keys: Vec<String> = map.keys().cloned().collect();
+        keys.insert(0, "NEW".to_string());
+        let index = Select::new()
+            .with_prompt("Select a key to edit, or 'NEW' to add a new value")
+            .items(&keys)
+            .default(0)
+            .interact()
+            .unwrap();
+
+        if index == 0 { // Add new field
+            let key: String = Input::new()
+                .with_prompt("Key")
+                .interact_text()
+                .unwrap();
+            let value: String = Input::new()
+                .with_prompt("Value")
+                .interact_text()
+                .unwrap();
+
+            map.insert(key, value);
+        }
+        else { // Edit selected field
+            let key: String = keys[index - 1].clone();
+            let value: String = Input::new()
+                .with_prompt(format!("Enter a value for '{}'", key))
+                .interact_text()
+                .unwrap();
+        }
+
+        editing = Confirm::new()
+            .with_prompt("Would you like to edit/add another field?")
+            .interact()
+            .unwrap();
+    }
 }
