@@ -3,6 +3,11 @@ use super::{Callframe, common};
 use std::collections::HashMap;
 
 pub fn edit_callframe(mut callframe: &mut Callframe) {
+    /*
+    Keeping track of the fields in a separate vec rather than using the key set of the 
+    hashmap ensures that they render in the same order every time in the CLI
+     */ 
+    let fields = vec!["Name", "URL", "Method", "Headers", "Parameters"];
     let field_map: HashMap<&str, fn(&mut Callframe)> = HashMap::from([
         ("Name", edit_name as fn(&mut Callframe)),
         ("URL", edit_url as fn(&mut Callframe)),
@@ -13,7 +18,6 @@ pub fn edit_callframe(mut callframe: &mut Callframe) {
 
     let mut editing = true;
     while editing {
-        let fields: Vec<&str> = field_map.keys().cloned().collect();
         let index = Select::new()
             .with_prompt("Select a field to edit")
             .items(&fields)
