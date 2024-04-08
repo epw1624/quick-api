@@ -1,4 +1,4 @@
-use dialoguer::{Select, Input, Password, Confirm};
+use dialoguer::{Select, Input, Confirm};
 use super::{Callframe, common};
 use std::collections::HashMap;
 
