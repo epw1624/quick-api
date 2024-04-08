@@ -38,7 +38,7 @@ async fn main() {
 
         match loaded_result {
             Some(mut callframe) => {
-                callframe.name = "test".to_string();
+                callframe::edit::edit_callframe(&mut callframe);
                 let future = callframe.make_request();
                 let _ = block_on(future);
                 let _ = Callframe::save_callframe(&callframe);

@@ -1,6 +1,8 @@
 pub mod callframe_visitor;
 pub mod new;
 pub mod load;
+pub mod edit;
+pub mod common;
 
 use std::{fs, io};
 use std::error::Error;
